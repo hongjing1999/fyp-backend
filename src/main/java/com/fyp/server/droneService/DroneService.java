@@ -100,6 +100,8 @@ public class DroneService {
         // new user gets initially a generated password
         newDrone.setPassword(encryptedPassword);
         newDrone.setName(droneDTO.getName());
+        newDrone.setIpAddress(droneDTO.getIpAddress());
+        newDrone.setDroneUserId(droneUser.getId());
         Set<Authority> authorities = new HashSet<>();
         authorityRepository.findById(AuthoritiesConstants.DRONE).ifPresent(authorities::add);
         newDrone.setAuthorities(authorities);

@@ -1,6 +1,7 @@
 package com.fyp.server.web.droneUserRest;
 
 import com.fyp.server.config.Constants;
+import com.fyp.server.domain.Drone;
 import com.fyp.server.domain.DroneUser;
 import com.fyp.server.domain.User;
 import com.fyp.server.droneUserService.DroneUserDroneService;
@@ -67,21 +68,17 @@ public class DroneUserDroneManagementResource {
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
     public void createDrone(@Valid @RequestBody DroneDTO droneDTO){
         log.debug("REST request to create drone : {}", droneDTO);
-        
         Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
         if(userOptional.isPresent()) {
         	log.debug("Login: {}", userOptional.get());
         	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(userOptional.get());
         	if(droneUserOptional.isPresent()) {
-        		String result = droneUserDroneService.createDrone(droneUserOptional.get(), droneDTO);
-        		log.debug("--------------Result: {}", result);
+        		Drone result = droneUserDroneService.createDrone(droneUserOptional.get(), droneDTO);
+        		log.debug("--------------Result: {}", result.getName());
+
         	}
         	
         }
-        
-        
-        
-
     }
 
   

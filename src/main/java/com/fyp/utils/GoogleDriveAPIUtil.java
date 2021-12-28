@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -20,6 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
@@ -99,7 +101,7 @@ public class GoogleDriveAPIUtil {
 		System.out.println("--------------------------"+ privateKey);
 	}
 	
-	public static void uploadFile(String contentType, String filename, String fileContent) {
+	public static String uploadFile(String contentType, String filename, String parent, String fileContent) {
 		ObjectMapper mapper = new ObjectMapper();
 		String accessToken = "Bearer " + getAccessToken();
 		String url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
@@ -116,6 +118,7 @@ public class GoogleDriveAPIUtil {
         
         ArrayList<String> parents = new ArrayList<String>();
         parents.add("14bW_E-YB2IM5jCg3aYC5PqyeaEuJfWWC");
+        parents.add(parent);
         String[] parentsArray  = new String[parents.size()];
         parentsArray = parents.toArray(parentsArray);
         metadata.setParents(parentsArray);
@@ -132,13 +135,45 @@ public class GoogleDriveAPIUtil {
         
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
         builder.part("metadata", json).header("Content-Type", "application/json");
-        builder.part("media", fileContent).header("Content-Type", contentType);
+        if(fileContent != null) {
+        	builder.part("media", fileContent).header("Content-Type", contentType);
+        }
+        
         MultiValueMap<String, HttpEntity<?>> parts = builder.build();
         
         HttpEntity<MultiValueMap<String, HttpEntity<?>>> request = new HttpEntity<MultiValueMap<String, HttpEntity<?>>>(parts, headers);
-        ResponseEntity<String> result = restTemplate.postForEntity(url, request, String.class);
-
+        ResponseEntity<GoogleDriveFile> result = restTemplate.postForEntity(url, request, GoogleDriveFile.class);
+        return result.getBody().getId();
         
+	}
+	
+	public static String searchFile(String fileName, boolean isFolder) {
+		ObjectMapper mapper = new ObjectMapper();
+		String accessToken = "Bearer " + getAccessToken();
+		System.out.print("TOKEN-----------------------------------"+accessToken);
+		String url = "https://www.googleapis.com/drive/v3/files";
+		
+		String queryString = "'14bW_E-YB2IM5jCg3aYC5PqyeaEuJfWWC' in parents and trashed = false and name = '" + fileName + "'";
+		if(isFolder) {
+			queryString = "mimeType = 'application/vnd.google-apps.folder' and " + queryString;
+		}
+		url = url +"?q=" + queryString;
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", accessToken);
+		
+		
+		HttpEntity<?> request = new HttpEntity<>(headers);
+
+		ResponseEntity<GoogleDriveFileList> result = restTemplate.exchange(url, HttpMethod.GET, request, GoogleDriveFileList.class);
+		List<GoogleDriveFile> fileList =  result.getBody().getFiles();
+		if(fileList.size()>0) {
+			return fileList.get(0).id;
+		}
+		else {
+			return null;
+		}
+		
 	}
 	
 	
@@ -191,6 +226,46 @@ public class GoogleDriveAPIUtil {
 		public void setExpires_in(int expires_in) {
 			this.expires_in = expires_in;
 		}
+		
+	}
+	
+	private static class GoogleDriveFileList{
+		List<GoogleDriveFile> files;
+
+		public List<GoogleDriveFile> getFiles() {
+			return files;
+		}
+
+		public void setFiles(List<GoogleDriveFile> files) {
+			this.files = files;
+		}
+		
+	}
+	
+	private static class GoogleDriveFile {
+		String id;
+		String name;
+		String mimeType;
+		public String getId() {
+			return id;
+		}
+		public void setId(String id) {
+			this.id = id;
+		}
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		public String getMimeType() {
+			return mimeType;
+		}
+		public void setMimeType(String mimeType) {
+			this.mimeType = mimeType;
+		}
+		
+		
 		
 	}
 }

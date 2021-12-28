@@ -16,6 +16,8 @@ public class DroneDTO {
 	
     private String login;
     
+    private String password;
+    
 	private Long droneUserId;
 	
 	private String ipAddress;
@@ -128,6 +130,14 @@ public class DroneDTO {
 
 	public void setAuthorities(Set<String> authorities) {
 		this.authorities = authorities;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 	
 	

@@ -1,4 +1,4 @@
-package com.fyp.server.droneUserService;
+package com.fyp.server.droneService;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fyp.server.config.Constants;
@@ -50,55 +50,32 @@ import tech.jhipster.security.RandomUtil;
  */
 @Service
 @Transactional
-public class DroneUserDroneService {
+public class DroneCommunicationService {
 
-    private final Logger log = LoggerFactory.getLogger(DroneUserDroneService.class);
+    private final Logger log = LoggerFactory.getLogger(DroneCommunicationService.class);
     
     private final DroneService droneService;
     
     private final DroneRepository droneRepository;
     
 
-    public DroneUserDroneService(DroneRepository droneRepository, DroneService droneService) {
+    public DroneCommunicationService(DroneRepository droneRepository, DroneService droneService) {
     	this.droneRepository = droneRepository;
     	this.droneService = droneService;
     }
     
-    public Drone createDrone(DroneUser droneUser, DroneDTO droneDTO) {
-
-    	String createDroneUrl = "http://157.245.94.152:5000/create-user";
-    	RestTemplate restTemplate = new RestTemplate();
-    	HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        String droneName = droneUser.getLogin()+"@" + droneDTO.getName();
-        JSONObject droneRequest = new JSONObject();
-        try {
-        	droneRequest.put("username", droneName);
-        	HttpEntity<String> request = new HttpEntity<String>(droneRequest.toString(), headers);
-            ResponseEntity<String> result = restTemplate.postForEntity(createDroneUrl, request, String.class);
-            if(result.getStatusCodeValue() == 200) {
-            	String vpnConfiguration = result.getBody();
-            	String googleDriveFolderId = GoogleDriveAPIUtil.searchFile(droneUser.getLogin(), true);
-            	if(googleDriveFolderId == null) {
-            		googleDriveFolderId = GoogleDriveAPIUtil.uploadFile("application/vnd.google-apps.folder", droneUser.getLogin(), null, null);
-            	}
-            	GoogleDriveAPIUtil.uploadFile(MediaType.TEXT_PLAIN_VALUE, droneName+".conf",googleDriveFolderId, vpnConfiguration);
-                String ipAddress = vpnConfiguration.split("Address = ")[1].split(" ,")[0];
-                
-                droneDTO.setIpAddress(ipAddress);
-                Drone drone = droneService.registerDrone(droneDTO, droneUser, droneDTO.getPassword());
-
-                return drone;
-            }
-            else {
-            	return null;
-            }
-            
-        }
-        catch (JSONException e) {
-        	throw e;
-        }
+    public Drone receiveHeartbeat(DroneDTO droneDTO) {
+    	Optional<Drone> droneOptional = droneRepository.findOneByLogin(droneDTO.getLogin());
+    	if(droneOptional.isPresent()) {
+    		Drone drone = droneOptional.get();
+    		drone.setLastHeartBeatTime(Instant.now());
+    		//TODO set drone telemetry data
+    		
+    		droneRepository.save(drone);
+    		return drone;
+    	}
+    	return null;
+    	
     }
     
     

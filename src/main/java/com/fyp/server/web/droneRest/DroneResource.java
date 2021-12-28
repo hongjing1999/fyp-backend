@@ -1,7 +1,9 @@
 package com.fyp.server.web.droneRest;
 
 import com.fyp.server.config.Constants;
+import com.fyp.server.domain.Drone;
 import com.fyp.server.domain.User;
+import com.fyp.server.droneService.DroneCommunicationService;
 import com.fyp.server.repository.UserRepository;
 import com.fyp.server.security.AuthoritiesConstants;
 import com.fyp.server.service.MailService;
@@ -38,17 +40,24 @@ import tech.jhipster.web.util.ResponseUtil;
 public class DroneResource {
 	private final Logger log = LoggerFactory.getLogger(DroneResource.class);
    
-
-    public DroneResource() {
-
+	private final DroneCommunicationService droneCommunicationService;
+    public DroneResource(DroneCommunicationService droneCommunicationService) {
+    	this.droneCommunicationService = droneCommunicationService;
     }
     
     @PostMapping("/heartbeat")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONE + "\")")
     public ResponseEntity<?> heartbeatSignal(@Valid @RequestBody DroneDTO droneDTO){
         log.debug("Heartbeat REST request from drone: {}", droneDTO.getIpAddress());
-
-        return new ResponseEntity<>(droneDTO, HttpStatus.OK);
-       
+        
+        Drone drone = droneCommunicationService.receiveHeartbeat(droneDTO);
+        
+        if(drone != null) {
+        	return new ResponseEntity<>(droneDTO, HttpStatus.OK);
+        }
+        else {
+        	return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
  
