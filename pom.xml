@@ -103,7 +103,12 @@
     </dependencyManagement>
 
     <dependencies>
-        
+    	
+
+        <dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
          <!-- https://mvnrepository.com/artifact/org.json/json -->
         <dependency>
             <groupId>org.json</groupId>

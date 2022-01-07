@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fyp.server.config.Constants;
 import com.fyp.server.domain.Authority;
 import com.fyp.server.domain.Drone;
+import com.fyp.server.domain.DroneTelemetry;
 import com.fyp.server.domain.DroneUser;
 import com.fyp.server.domain.User;
 import com.fyp.server.droneService.DroneService;
 import com.fyp.server.repository.AuthorityRepository;
 import com.fyp.server.repository.DroneRepository;
+import com.fyp.server.repository.DroneTelemetryRepository;
 import com.fyp.server.repository.DroneUserRepository;
 import com.fyp.server.repository.UserRepository;
 import com.fyp.server.security.AuthoritiesConstants;
@@ -18,6 +20,7 @@ import com.fyp.server.service.InvalidPasswordException;
 import com.fyp.server.service.UsernameAlreadyUsedException;
 import com.fyp.server.service.dto.AdminUserDTO;
 import com.fyp.server.service.dto.DroneDTO;
+import com.fyp.server.service.dto.DroneTelemetryDTO;
 import com.fyp.server.service.dto.DroneUserDTO;
 import com.fyp.server.service.dto.UserDTO;
 import com.fyp.utils.GoogleDriveAPIUtil;
@@ -58,24 +61,23 @@ public class DroneCommunicationService {
     
     private final DroneRepository droneRepository;
     
+    private final DroneTelemetryRepository droneTelemetryRepository;
+    
 
-    public DroneCommunicationService(DroneRepository droneRepository, DroneService droneService) {
+    public DroneCommunicationService(DroneRepository droneRepository, DroneService droneService,
+    		DroneTelemetryRepository droneTelemetryRepository) {
     	this.droneRepository = droneRepository;
     	this.droneService = droneService;
+    	this.droneTelemetryRepository = droneTelemetryRepository;
     }
     
-    public Drone receiveHeartbeat(DroneDTO droneDTO) {
-    	Optional<Drone> droneOptional = droneRepository.findOneByLogin(droneDTO.getLogin());
-    	if(droneOptional.isPresent()) {
-    		Drone drone = droneOptional.get();
-    		drone.setLastHeartBeatTime(Instant.now());
-    		//TODO set drone telemetry data
-    		
-    		droneRepository.save(drone);
-    		return drone;
-    	}
-    	return null;
+    public void receiveHeartbeat(Drone drone, DroneTelemetryDTO droneTelemetryDTO) {
     	
+    	drone.setLastHeartBeatTime(Instant.now());
+		droneRepository.save(drone);
+		
+		DroneTelemetry droneTelemetry = new DroneTelemetry(droneTelemetryDTO);
+		droneTelemetryRepository.save(droneTelemetry);
     }
     
     

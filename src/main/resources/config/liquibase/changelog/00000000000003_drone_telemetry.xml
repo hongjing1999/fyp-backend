@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+
+    <changeSet id="00000000000005" author="hongjing">
+        <createTable tableName="drone_telemetry">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="drone_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mode" type="varchar(20)">
+            	<constraints nullable="true"/>
+            </column>
+            <column name="armed" type="boolean">
+                <constraints nullable="true"/>
+            </column>
+            <column name="is_armable" type="boolean">
+                <constraints nullable="true"/>
+            </column>
+            <column name="global_lat" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="global_lon" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="global_alt" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="relative_lat" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="relative_lon" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="relative_alt" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="pitch" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="yaw" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="roll" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="velocity_x" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="velocity_y" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="velocity_z" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="bat_voltage" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="bat_current" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="bat_level" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="gps_fix" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="gps_num_sat" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ground_speed" type="decimal(19,15)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="system_status" type="varchar(20)">
+            	<constraints nullable="true"/>
+            </column>
+            
+
+            <column name="created_by" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="timestamp"/>
+            <column name="reset_date" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_modified_by" type="varchar(50)"/>
+            <column name="last_modified_date" type="timestamp"/>
+        </createTable>
+        
+        
+
+    </changeSet>
+
+</databaseChangeLog>

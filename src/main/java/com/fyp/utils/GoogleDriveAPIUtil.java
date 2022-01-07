@@ -117,8 +117,14 @@ public class GoogleDriveAPIUtil {
         metadata.setName(filename);
         
         ArrayList<String> parents = new ArrayList<String>();
-        parents.add("14bW_E-YB2IM5jCg3aYC5PqyeaEuJfWWC");
-        parents.add(parent);
+        
+        if(parent != null) {
+        	parents.add(parent);
+        }
+        else {
+        	parents.add("14bW_E-YB2IM5jCg3aYC5PqyeaEuJfWWC");
+        }
+        
         String[] parentsArray  = new String[parents.size()];
         parentsArray = parents.toArray(parentsArray);
         metadata.setParents(parentsArray);
@@ -147,16 +153,21 @@ public class GoogleDriveAPIUtil {
         
 	}
 	
-	public static String searchFile(String fileName, boolean isFolder) {
+	public static String searchFile(String fileName, boolean isFolder, String folderId) {
 		ObjectMapper mapper = new ObjectMapper();
 		String accessToken = "Bearer " + getAccessToken();
 		System.out.print("TOKEN-----------------------------------"+accessToken);
 		String url = "https://www.googleapis.com/drive/v3/files";
 		
-		String queryString = "'14bW_E-YB2IM5jCg3aYC5PqyeaEuJfWWC' in parents and trashed = false and name = '" + fileName + "'";
+		
+		String queryString = "trashed = false and name = '" + fileName + "'";
 		if(isFolder) {
-			queryString = "mimeType = 'application/vnd.google-apps.folder' and " + queryString;
+			queryString = "'14bW_E-YB2IM5jCg3aYC5PqyeaEuJfWWC' in parents and mimeType = 'application/vnd.google-apps.folder' and " + queryString;
 		}
+		else {
+			queryString = "'" + folderId+ "' in parents and " + queryString;
+		}
+		System.out.println("Query STRING------------------------ " + queryString);
 		url = url +"?q=" + queryString;
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
@@ -173,6 +184,21 @@ public class GoogleDriveAPIUtil {
 		else {
 			return null;
 		}
+		
+	}
+	
+	public static String downloadFile(String fileId) {
+		String accessToken = "Bearer " + getAccessToken();
+		String url = "https://www.googleapis.com/drive/v2/files/" + fileId + "?alt=media";
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", accessToken);
+		HttpEntity<?> request = new HttpEntity<>(headers);
+
+		ResponseEntity<String> result = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+		String fileContent =  result.getBody();
+		
+		return fileContent;
 		
 	}
 	

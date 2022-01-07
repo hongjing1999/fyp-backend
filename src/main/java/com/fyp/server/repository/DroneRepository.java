@@ -10,10 +10,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DroneRepository extends JpaRepository<Drone, Long> {
+public interface DroneRepository extends JpaRepository<Drone, Long>, JpaSpecificationExecutor<Drone> {
     Optional<Drone> findOneByLogin(String login);
     
     Optional<Drone> findOneByResetKey(String resetKey);
@@ -22,4 +23,6 @@ public interface DroneRepository extends JpaRepository<Drone, Long> {
     
     @EntityGraph(attributePaths = "authorities")
     Optional<Drone> findOneWithAuthoritiesByLogin(String login);
+    
+    List<Drone> findAllByIpAddressIsNull();
 }
