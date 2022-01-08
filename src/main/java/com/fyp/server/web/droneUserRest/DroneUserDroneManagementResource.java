@@ -15,6 +15,8 @@ import com.fyp.server.service.MailService;
 import com.fyp.server.service.UserService;
 import com.fyp.server.service.dto.AdminUserDTO;
 import com.fyp.server.service.dto.DroneDTO;
+import com.fyp.server.service.dto.DroneTelemetryDTO;
+import com.fyp.server.service.dto.DroneTelemetryGraphDTO;
 import com.fyp.server.service.dto.DroneUserDTO;
 import com.fyp.server.web.rest.errors.BadRequestAlertException;
 import com.fyp.server.web.rest.errors.EmailAlreadyUsedException;
@@ -22,12 +24,18 @@ import com.fyp.server.web.rest.errors.LoginAlreadyUsedException;
 import com.fyp.utils.GoogleDriveAPIUtil;
 import com.fyp.utils.PaginationUtil;
 
+import reactor.core.publisher.Flux;
+
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+
 
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
@@ -42,15 +50,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.ResponseUtil;
-import static java.util.concurrent.TimeUnit.SECONDS;
+
 
 
 @RestController
@@ -73,6 +84,7 @@ public class DroneUserDroneManagementResource {
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
 
+    
 
     public DroneUserDroneManagementResource(DroneUserDroneService droneUserDroneService, DroneUserRepository droneUserRepository) {
     	this.droneUserDroneService = droneUserDroneService;
@@ -122,6 +134,36 @@ public class DroneUserDroneManagementResource {
         }
     	
     }
+
+    @GetMapping("droneTelemetry/{droneId}")
+    public ResponseEntity<?> getDroneTelemetry(DroneCriteria droneCriteria, @PathVariable Long droneId, @RequestParam("range") String range) {
+    	Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
+        if(userOptional.isPresent()) {
+        	log.debug("Login: {}", userOptional.get());
+        	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(userOptional.get());
+        	if(droneUserOptional.isPresent()) {
+        		DroneUser droneUser = droneUserOptional.get();
+        		DroneTelemetryGraphDTO graph = droneUserDroneService.getDroneTelemetry(droneId, range);
+            			
+
+        		return new ResponseEntity<>(graph, HttpStatus.OK);
+
+        	}
+        	else {
+        		throw new BadRequestAlertException("DRONE_USER_NOT_EXIST", null, null);
+        	}
+        }
+        else {
+        	 throw new BadRequestAlertException("UNAUTHORIZED", null, null);
+        }
+    	
+    }
+    
+
+
+    
+    
+    
     
 
 

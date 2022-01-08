@@ -9,26 +9,30 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fyp.server.domain.Drone;
-import com.fyp.server.domain.Drone_;
+import com.fyp.server.domain.DroneTelemetry;
+import com.fyp.server.domain.DroneTelemetry_;
 import com.fyp.server.repository.DroneRepository;
+import com.fyp.server.repository.DroneTelemetryRepository;
 import com.fyp.server.service.dto.DroneDTO;
+import com.fyp.server.service.dto.DroneTelemetryDTO;
 
 import tech.jhipster.service.QueryService;
 
 @Service
 @Transactional
-public class DroneQueryService extends QueryService<Drone>{
-	private final Logger log = LoggerFactory.getLogger(DroneQueryService.class);
-    private final DroneRepository repository;
+public class DroneTelemetryQueryService extends QueryService<DroneTelemetry>{
+	private final Logger log = LoggerFactory.getLogger(DroneTelemetryQueryService.class);
+    private final DroneTelemetryRepository repository;
 
 
-    public DroneQueryService(
-    		DroneRepository repository
+    public DroneTelemetryQueryService(
+    		DroneTelemetryRepository repository
     ) {
         this.repository = repository;
        
@@ -72,11 +76,10 @@ public class DroneQueryService extends QueryService<Drone>{
 //    	return merchantOrderDTOList;
 //    }
 
-    public Page<DroneDTO> read(
-        DroneCriteria droneCriteria,
-        Pageable pageable) {
+    public List<DroneTelemetryDTO> read(
+        DroneTelemetryCriteria droneTelemetryCriteria, Sort sort) {
     	
-    	Page<Drone> dronePage = repository.findAll(createSpecification(droneCriteria), pageable);
+    	List<DroneTelemetry> droneTelemetryList = repository.findAll(createSpecification(droneTelemetryCriteria), sort);
 
 //        .
 
@@ -92,20 +95,15 @@ public class DroneQueryService extends QueryService<Drone>{
 //                orderStatus
 //            ));
 //        }
-    	List<DroneDTO> droneDTOList = new ArrayList<>();
+    	List<DroneTelemetryDTO> droneTelemetryDTOList = new ArrayList<>();
     	
-    	for(Drone drone : dronePage.getContent()) {
-    		DroneDTO droneDTO = new DroneDTO();
-    		droneDTO.setDroneUserId(drone.getDroneUserId());
-    		if(drone.getIpAddress()!=null) {
-    			droneDTO.setIpAddress(drone.getIpAddress());
-    		}
-    		droneDTO.setId(drone.getId());
-    		droneDTO.setName(drone.getName());
-    		droneDTOList.add(droneDTO);
+    	for(DroneTelemetry droneTelemetry : droneTelemetryList) {
+    		DroneTelemetryDTO droneTelemetryDTO = new DroneTelemetryDTO(droneTelemetry);
+    		
+    		droneTelemetryDTOList.add(droneTelemetryDTO);
     	}
 
-        return new PageImpl<>(droneDTOList, pageable, dronePage.getTotalElements());
+        return droneTelemetryDTOList;
     }
 
 //    private Specification<Drone> getSpec(DroneCriteria c) {
@@ -120,21 +118,21 @@ public class DroneQueryService extends QueryService<Drone>{
 //        return s;
 //    }
 //    
-	private Specification<Drone> createSpecification(DroneCriteria criteria) {
-		Specification<Drone> specification = Specification.where(null);
+	private Specification<DroneTelemetry> createSpecification(DroneTelemetryCriteria criteria) {
+		Specification<DroneTelemetry> specification = Specification.where(null);
 		if (criteria != null) {
 			
-			if(criteria.getDroneUserFilter() != null) {
-				specification = specification.and(buildSpecification(criteria.getDroneUserFilter(), Drone_.droneUserId));
+			if(criteria.getDroneId() != null) {
+				specification = specification.and(buildSpecification(criteria.getDroneId(), DroneTelemetry_.droneId));
 			}
 
-//			if(criteria.getCreatedStartDate() != null) {
-//				specification = specification.and(buildRangeSpecification(criteria.getCreatedStartDate(), Order_.createdDate));
-//			}
-//			
-//			if(criteria.getCreatedEndDate() != null) {
-//				specification = specification.and(buildRangeSpecification(criteria.getCreatedEndDate(), Order_.createdDate));
-//			}
+			if(criteria.getCreatedDateStart() != null) {
+				specification = specification.and(buildRangeSpecification(criteria.getCreatedDateStart(), DroneTelemetry_.createdDate));
+			}
+			
+			if(criteria.getCreatedDateEnd() != null) {
+				specification = specification.and(buildRangeSpecification(criteria.getCreatedDateEnd(), DroneTelemetry_.createdDate));
+			}
 //
 //			if (criteria.getMerchantId() != null) {
 //				specification = specification.and(buildSpecification(criteria.getMerchantId(), Order_.merchantId));

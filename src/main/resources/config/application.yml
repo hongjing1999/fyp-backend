@@ -104,6 +104,11 @@ spring:
         #- tls
   jmx:
     enabled: false
+  resources:
+    cache:
+      cachecontrol:
+        max-age: 0
+        must-revalidate: true
   data:
     jpa:
       repositories:
@@ -150,6 +155,8 @@ spring:
       console-available: true
 
 server:
+  compression:
+    enabled: false
   servlet:
     session:
       cookie:
@@ -201,5 +208,3 @@ jhipster:
 # More documentation is available at:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
-
-# application:

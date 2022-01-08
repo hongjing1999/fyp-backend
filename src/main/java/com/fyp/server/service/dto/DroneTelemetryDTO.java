@@ -13,6 +13,7 @@ import javax.validation.constraints.Size;
 
 import com.fyp.server.config.Constants;
 import com.fyp.server.domain.Drone;
+import com.fyp.server.domain.DroneTelemetry;
 
 public class DroneTelemetryDTO {
 
@@ -64,10 +65,41 @@ public class DroneTelemetryDTO {
     
     private String mode;
     
+    private Instant createdDate;
+    
 
     public DroneTelemetryDTO() {
         // Empty constructor needed for Jackson.
     }
+    
+    public DroneTelemetryDTO(DroneTelemetry droneTelemetry) {
+		super();
+		this.id = droneTelemetry.getId();
+		this.droneId = droneTelemetry.getDroneId();
+		this.globalLat = droneTelemetry.getGlobalLat();
+		this.globalLon = droneTelemetry.getGlobalLon();
+		this.globalAlt = droneTelemetry.getGlobalAlt();
+		this.relativeLat = droneTelemetry.getRelativeLat();
+		this.relativeLon = droneTelemetry.getRelativeLon();
+		this.relativeAlt = droneTelemetry.getRelativeAlt();
+		this.pitch = droneTelemetry.getPitch();
+		this.yaw = droneTelemetry.getYaw();
+		this.roll = droneTelemetry.getRoll();
+		this.velocityX = droneTelemetry.getVelocityX();
+		this.velocityY = droneTelemetry.getVelocityY();
+		this.velocityZ = droneTelemetry.getVelocityZ();
+		this.gpsFix = droneTelemetry.getGpsFix();
+		this.gpsNumSat = droneTelemetry.getGpsNumSat();
+		this.batVoltage = droneTelemetry.getBatVoltage();
+		this.batCurrent = droneTelemetry.getBatCurrent();
+		this.batLevel = droneTelemetry.getBatLevel();
+		this.isArmable = droneTelemetry.isArmable();
+		this.armed = droneTelemetry.isArmed();
+		this.systemStatus = droneTelemetry.getSystemStatus();
+		this.groundSpeed = droneTelemetry.getGroundSpeed();
+		this.mode = droneTelemetry.getMode();
+		this.createdDate = droneTelemetry.getCreatedDate();
+	}
 
 
 	public Long getId() {
@@ -307,6 +339,14 @@ public class DroneTelemetryDTO {
 
 	public void setMode(String mode) {
 		this.mode = mode;
+	}
+
+	public Instant getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(Instant createdDate) {
+		this.createdDate = createdDate;
 	}
     
     

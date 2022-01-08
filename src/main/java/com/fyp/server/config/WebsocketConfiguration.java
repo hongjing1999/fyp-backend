@@ -30,6 +30,7 @@ public class WebsocketConfiguration implements WebSocketMessageBrokerConfigurer 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic");
+        config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
@@ -41,7 +42,7 @@ public class WebsocketConfiguration implements WebSocketMessageBrokerConfigurer 
         registry
             .addEndpoint("/websocket/tracker")
             .setHandshakeHandler(defaultHandshakeHandler())
-            .setAllowedOrigins(allowedOrigins)
+            .setAllowedOriginPatterns(allowedOrigins)
             .withSockJS()
             .setInterceptors(httpSessionHandshakeInterceptor());
     }
