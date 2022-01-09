@@ -7,6 +7,7 @@ import com.fyp.server.domain.User;
 import com.fyp.server.droneUserService.DroneCriteria;
 import com.fyp.server.droneUserService.DroneUserDroneService;
 import com.fyp.server.droneUserService.DroneUserService;
+import com.fyp.server.repository.DroneRepository;
 import com.fyp.server.repository.DroneUserRepository;
 import com.fyp.server.repository.UserRepository;
 import com.fyp.server.security.AuthoritiesConstants;
@@ -78,7 +79,7 @@ public class DroneUserDroneManagementResource {
     
     private final DroneUserRepository droneUserRepository;
     
-    
+    private final DroneRepository droneRepository;
     
 
     @Value("${jhipster.clientApp.name}")
@@ -86,12 +87,14 @@ public class DroneUserDroneManagementResource {
 
     
 
-    public DroneUserDroneManagementResource(DroneUserDroneService droneUserDroneService, DroneUserRepository droneUserRepository) {
+    public DroneUserDroneManagementResource(DroneUserDroneService droneUserDroneService, DroneUserRepository droneUserRepository,
+    		DroneRepository droneRepository) {
     	this.droneUserDroneService = droneUserDroneService;
     	this.droneUserRepository = droneUserRepository;
+    	this.droneRepository = droneRepository;
     }
 
-    @PostMapping("/create-drone")
+    @PostMapping("/drone")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
     public void createDrone(@Valid @RequestBody DroneDTO droneDTO){
         log.debug("REST request to create drone : {}", droneDTO);
@@ -111,6 +114,7 @@ public class DroneUserDroneManagementResource {
     }
     
     @GetMapping("drone")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
     public ResponseEntity<?> getDrone(DroneCriteria droneCriteria, Pageable pageable) {
     	Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
         if(userOptional.isPresent()) {
@@ -133,6 +137,41 @@ public class DroneUserDroneManagementResource {
         	 throw new BadRequestAlertException("UNAUTHORIZED", null, null);
         }
     	
+    }
+    @DeleteMapping("drone/{droneId}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
+    public ResponseEntity<?> deleteDrone(@PathVariable Long droneId){
+    	Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
+        if(userOptional.isPresent()) {
+        	log.debug("Login: {}", userOptional.get());
+        	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(userOptional.get());
+        	if(droneUserOptional.isPresent()) {
+        		DroneUser droneUser = droneUserOptional.get();
+        		Optional<Drone> droneOptional = droneRepository.findById(droneId);
+        		if(droneOptional.isPresent()) {
+        			Drone drone = droneOptional.get();
+        			if(drone.getDroneUserId().equals(droneUser.getId())) {
+        				droneUserDroneService.deleteDrone(droneId);
+        				return new ResponseEntity<>( HttpStatus.ACCEPTED);
+        			}
+        			else {
+        				throw new BadRequestAlertException("UNAUTHORIZED", null, null);
+        			}
+        			
+        		}
+        		else {
+        			throw new BadRequestAlertException("DRONE_NOT_EXIST", null, null);
+        		}
+
+
+        	}
+        	else {
+        		throw new BadRequestAlertException("DRONE_USER_NOT_EXIST", null, null);
+        	}
+        }
+        else {
+        	 throw new BadRequestAlertException("UNAUTHORIZED", null, null);
+        }
     }
 
     @GetMapping("droneTelemetry/{droneId}")

@@ -138,6 +138,20 @@ public class DroneUserDroneService {
     	return droneQueryService.read(droneCriteria, pageable);
     }
     
+    public boolean deleteDrone(Long droneId) {
+    	Optional<Drone> droneOptional = droneRepository.findById(droneId);
+    	if(droneOptional.isPresent()) {
+    		Drone drone = droneOptional.get();
+    		List<DroneTelemetry> droneTelemetry = droneTelemetryRepository.findAllByDroneId(droneId);
+    		droneTelemetryRepository.deleteInBatch(droneTelemetry);
+    		droneRepository.delete(drone);
+    		return true;
+    	}
+    	else {
+    		return false;
+    	}
+    }
+    
     public DroneTelemetryGraphDTO getDroneTelemetry(Long droneId, String range){
     	TemporalUnit unit = ChronoUnit.MINUTES;
     	Instant startInstant = ZonedDateTime.now().minusHours(1).toInstant();
@@ -178,6 +192,17 @@ public class DroneUserDroneService {
     	List<DroneTelemetryDTO> averageDroneTelemetryDTOList = getAverage(list, unit);
     	DroneTelemetryGraphDTO droneTelemetryGraphDTO = getDateList(averageDroneTelemetryDTOList, startInstant, Instant.now(), unit);
     	droneTelemetryGraphDTO.setLatestTelemetry(droneTelemetryDTO);
+    	if(droneTelemetryDTO.getCreatedDate() != null) {
+    		if(ChronoUnit.SECONDS.between(droneTelemetryDTO.getCreatedDate(), Instant.now()) > 15) {
+        		droneTelemetryGraphDTO.setStatus(false);
+        	}
+        	else {
+        		droneTelemetryGraphDTO.setStatus(true);
+        	}
+    	}
+    	else {
+    		droneTelemetryGraphDTO.setStatus(false);
+    	}
     	return droneTelemetryGraphDTO;
     	
     }

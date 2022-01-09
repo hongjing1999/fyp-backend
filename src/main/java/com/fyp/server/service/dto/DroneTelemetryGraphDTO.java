@@ -14,6 +14,7 @@ import javax.validation.constraints.*;
  */
 public class DroneTelemetryGraphDTO {
 
+    boolean status;
     
     List<Instant> dateList;
     
@@ -44,6 +45,16 @@ public class DroneTelemetryGraphDTO {
 	public void setDateList(List<Instant> dateList) {
 		this.dateList = dateList;
 	}
+
+	public boolean isStatus() {
+		return status;
+	}
+
+	public void setStatus(boolean status) {
+		this.status = status;
+	}
+	
+	
     
     
     

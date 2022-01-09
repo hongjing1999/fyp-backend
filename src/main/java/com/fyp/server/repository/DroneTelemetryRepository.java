@@ -2,6 +2,7 @@ package com.fyp.server.repository;
 
 import com.fyp.server.domain.DroneTelemetry;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,6 @@ public interface DroneTelemetryRepository extends JpaRepository<DroneTelemetry, 
 	
 	@Query(nativeQuery = true, value = "SELECT * FROM drone_telemetry u WHERE u.drone_id = :droneId ORDER BY u.created_date DESC LIMIT 1")
 	Optional<DroneTelemetry> findFirstByDroneIdOrderByCreatedDateByDesc( @Param("droneId") Long droneId);
+	
+	List<DroneTelemetry> findAllByDroneId(Long droneId);
 }

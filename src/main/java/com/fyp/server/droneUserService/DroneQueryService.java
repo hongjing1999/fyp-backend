@@ -1,5 +1,7 @@
 package com.fyp.server.droneUserService;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,6 +104,19 @@ public class DroneQueryService extends QueryService<Drone>{
     		}
     		droneDTO.setId(drone.getId());
     		droneDTO.setName(drone.getName());
+    		if(drone.getLastHeartBeatTime()!=null) {
+    			if(ChronoUnit.SECONDS.between(drone.getLastHeartBeatTime(), Instant.now()) > 15) {
+        			droneDTO.setOnline(false);
+            	}
+            	else {
+            		droneDTO.setOnline(true);
+            	}
+    		}
+    		else {
+    			droneDTO.setOnline(false);
+    		}
+    		
+    		
     		droneDTOList.add(droneDTO);
     	}
 

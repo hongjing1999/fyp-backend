@@ -35,6 +35,8 @@ public class DroneDTO {
     private Instant lastModifiedDate;
     
     private Set<String> authorities;
+    
+    private boolean online;
 
     public DroneDTO() {
         // Empty constructor needed for Jackson.
@@ -138,6 +140,14 @@ public class DroneDTO {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public boolean isOnline() {
+		return online;
+	}
+
+	public void setOnline(boolean online) {
+		this.online = online;
 	}
 	
 	
