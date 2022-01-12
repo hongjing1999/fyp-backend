@@ -24,12 +24,17 @@ import com.fyp.server.web.rest.errors.EmailAlreadyUsedException;
 import com.fyp.server.web.rest.errors.LoginAlreadyUsedException;
 import com.fyp.utils.GoogleDriveAPIUtil;
 import com.fyp.utils.PaginationUtil;
-
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
@@ -39,18 +44,25 @@ import java.util.concurrent.Executors;
 
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.Pattern;
+
+import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -58,7 +70,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.ResponseUtil;
@@ -175,6 +190,7 @@ public class DroneUserDroneManagementResource {
     }
 
     @GetMapping("droneTelemetry/{droneId}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
     public ResponseEntity<?> getDroneTelemetry(DroneCriteria droneCriteria, @PathVariable Long droneId, @RequestParam("range") String range) {
     	Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
         if(userOptional.isPresent()) {
@@ -198,6 +214,43 @@ public class DroneUserDroneManagementResource {
     	
     }
     
+    
+    @RequestMapping("/{droneId}/stream.mjpg")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
+    public void getVideoStream(HttpServletResponse response, @PathVariable Long droneId) {
+        RestTemplate restTemplate = new RestTemplate();
+        Optional<String> loginOptional = SecurityUtils.getCurrentUserLogin();
+        if(loginOptional.isPresent()) {
+        	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(loginOptional.get());
+        	if(droneUserOptional.isPresent()) {
+        		DroneUser droneUser = droneUserOptional.get();
+        		
+        		Optional<Drone> droneOptional = droneRepository.findById(droneId);
+                if(droneOptional.isPresent()) {
+                	Drone drone = droneOptional.get();
+                	if(drone.getDroneUserId().equals(droneUser.getId())) {
+                		if(drone.getIpAddress() != null) {
+                			restTemplate.execute(
+                                    URI.create("http://" +  drone.getIpAddress() +":8000/stream.mjpg"),
+                                    HttpMethod.GET,
+                                    (ClientHttpRequest request) -> {},
+                                    responseExtractor -> {
+                                    	log.debug("THIS IS A RESPONSE, {} ", response.toString());
+                                        response.setContentType("multipart/x-mixed-replace; boundary=FRAME");
+                                        IOUtils.copy(responseExtractor.getBody(), response.getOutputStream());
+                                        return null;
+                                    }
+                            );
+                		}
+                		
+                	}
+                	
+                }
+        	}
+        }
+        
+        
+    }
 
 
     
