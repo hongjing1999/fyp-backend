@@ -243,6 +243,9 @@ public class DroneUserDroneService {
         				droneDTO.setImage(drone.getImage());
         				droneDTO.setId(drone.getId());
         				droneDTO.setName(drone.getName());
+        				if(drone.getIpAddress() != null) {
+        					droneDTO.setIpAddress(drone.getIpAddress());
+        				}
         				return droneDTO;
     				}
     				else {
