@@ -236,10 +236,22 @@ public class DroneUserDroneManagementResource {
         	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(userOptional.get());
         	if(droneUserOptional.isPresent()) {
         		DroneUser droneUser = droneUserOptional.get();
-        		DroneTelemetryGraphDTO graph = droneUserDroneService.getDroneTelemetry(droneId, range);
+        		Optional<Drone> droneOptional = droneRepository.findById(droneId);
+        		if(droneOptional.isPresent()) {
+        			Drone drone = droneOptional.get();
+        			if(drone.getDroneUserId().equals(droneUser.getId())) {
+        				DroneTelemetryGraphDTO graph = droneUserDroneService.getDroneTelemetry(droneId, range);
             			
 
-        		return new ResponseEntity<>(graph, HttpStatus.OK);
+                		return new ResponseEntity<>(graph, HttpStatus.OK);
+        			}
+        			else {
+        				throw new BadRequestAlertException("UNAUTHORIZED_USER", null, null);
+        			}
+        		}
+        		else {
+        			throw new BadRequestAlertException("INVALID_DRONE", null, null);
+        		}
 
         	}
         	else {
