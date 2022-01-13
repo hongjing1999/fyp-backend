@@ -102,6 +102,9 @@ public class DroneService {
         newDrone.setName(droneDTO.getName());
 //        newDrone.setIpAddress(droneDTO.getIpAddress());
         newDrone.setDroneUserId(droneUser.getId());
+        if(droneDTO.getImage() != null) {
+        	newDrone.setImage(droneDTO.getImage());
+        }
         Set<Authority> authorities = new HashSet<>();
         authorityRepository.findById(AuthoritiesConstants.DRONE).ifPresent(authorities::add);
         newDrone.setAuthorities(authorities);

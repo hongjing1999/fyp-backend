@@ -25,11 +25,16 @@ import com.fyp.server.service.dto.DroneTelemetryDTO;
 import com.fyp.server.service.dto.DroneTelemetryGraphDTO;
 import com.fyp.server.service.dto.DroneUserDTO;
 import com.fyp.server.service.dto.UserDTO;
+import com.fyp.server.web.rest.errors.BadRequestAlertException;
 import com.fyp.utils.GoogleDriveAPIUtil;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -38,6 +43,7 @@ import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.commons.compress.utils.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -126,6 +132,90 @@ public class DroneUserDroneService {
         		}
     		}
     		
+    	}
+    }
+    
+    public InputStream getDroneConfigurationFile(Long droneId) {
+    	Optional<Drone> droneOptional = droneRepository.findById(droneId);
+    	if(droneOptional.isPresent()) {
+    		Drone drone = droneOptional.get();
+    		Optional<DroneUser> droneUserOptional = droneUserRepository.findById(drone.getDroneUserId());
+    		if(droneUserOptional.isPresent()) {
+    			DroneUser droneUser = droneUserOptional.get();
+    			String directoryName = droneUser.getLogin();
+    			String directoryId = GoogleDriveAPIUtil.searchFile(directoryName, true, null);
+    			if(directoryId != null) {
+    				String fileName = directoryName + "@" + drone.getLogin() + ".conf";
+    				String fileId =  GoogleDriveAPIUtil.searchFile(fileName, false, directoryId);
+    				if(fileId != null) {
+    					String fileContent = GoogleDriveAPIUtil.downloadFile(fileId);
+    					InputStream is = new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8));
+    					return is;
+    				}
+    				else {
+    					throw new BadRequestAlertException("File Not Found", null, null);
+    				}
+    			}
+    			else {
+    				throw new BadRequestAlertException("Directory Not Found", null, null);
+    			}
+    		}
+    		else {
+    			throw new BadRequestAlertException("Invalid Drone User", null, null);
+    		}
+    	}
+    	else {
+    		throw new BadRequestAlertException("Invalid drone", null, null);
+    	}
+    }
+    
+    public InputStream getInstallationScript() throws IOException {
+    	
+    	String fileName = "desktop.tar.xz";
+		String fileId =  GoogleDriveAPIUtil.searchFile(fileName, false, null);
+		if(fileId != null) {
+			byte[] fileContent = GoogleDriveAPIUtil.downloadFileStream(fileId);
+			InputStream is = new ByteArrayInputStream(fileContent);
+			return is;
+		}
+		else {
+			throw new BadRequestAlertException("File Not Found", null, null);
+		}
+    	
+    			
+    				
+    			
+    }
+    
+    public void takeOff(Long droneId) {
+    	Optional<Drone> droneOptional = droneRepository.findById(droneId);
+    	if(droneOptional.isPresent()) {
+    		Drone drone = droneOptional.get();
+    		String takeOffUrl = "http://" + "localhost" + ":5000/take-off";
+    		TakeOffRequest body = new TakeOffRequest();
+    		body.setAltitude(Double.valueOf(10));
+    		Mono<String> wasd = WebClient.create()
+        			.post()
+        			.uri(takeOffUrl)
+        			.contentType(MediaType.APPLICATION_JSON)
+        			.bodyValue(body).retrieve()
+        			.bodyToMono(String.class);
+    		wasd.subscribe();
+    	}
+    }
+    
+    public void landing(Long droneId) {
+    	Optional<Drone> droneOptional = droneRepository.findById(droneId);
+    	if(droneOptional.isPresent()) {
+    		Drone drone = droneOptional.get();
+    		String takeOffUrl = "http://" + "localhost" + ":5000/land";
+    		Mono<String> wasd = WebClient.create()
+        			.post()
+        			.uri(takeOffUrl)
+        			.contentType(MediaType.APPLICATION_JSON)
+        			.retrieve()
+        			.bodyToMono(String.class);
+    		wasd.subscribe();
     	}
     }
     
@@ -344,12 +434,7 @@ public class DroneUserDroneService {
     public Drone createDrone(DroneUser droneUser, DroneDTO droneDTO) {
 
     	String createDroneUrl = "http://157.245.94.152:5000/create-user";
-    	
-    	
-    	RestTemplate restTemplate = new RestTemplate();
-    	HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        
+
         Drone drone = droneService.registerDrone(droneDTO, droneUser, droneDTO.getPassword());
         
         log.debug("Drone Created, Drone ID : {}", drone.getId());
@@ -359,56 +444,15 @@ public class DroneUserDroneService {
         	VPNRequest body = new VPNRequest();
         	body.setUsername(droneName);
         	droneRequest.put("username", droneName);
-        	HttpEntity<String> request = new HttpEntity<String>(droneRequest.toString(), headers);
         	Mono<String> wasd = WebClient.create()
         			.post()
         			.uri(createDroneUrl)
         			.contentType(MediaType.APPLICATION_JSON)
         			.bodyValue(body).retrieve()
         			.bodyToMono(String.class);
-        	wasd.subscribe(
-//       	result -> {
-//        		String vpnConfiguration = result;
-//        		log.debug("flux result:: {}", vpnConfiguration);
-//            	
-//                String ipAddress = vpnConfiguration.split("Address = ")[1].split(" ,")[0];
-//                drone.setIpAddress(ipAddress);
-//                log.debug("VPN User Created, Drone IP: {}", ipAddress);
-//                droneRepository.save(drone);
-//                String googleDriveFolderId = null;
-//                try {
-//                	googleDriveFolderId = GoogleDriveAPIUtil.searchFile(droneUser.getLogin(), true);
-//                }
-//                catch(Exception e) {
-//                	googleDriveFolderId = null;
-//                }
-//                
-//            	if(googleDriveFolderId == null) {
-//            		googleDriveFolderId = GoogleDriveAPIUtil.uploadFile("application/vnd.google-apps.folder", droneUser.getLogin(), null, null);
-//            	}
-//                GoogleDriveAPIUtil.uploadFile(MediaType.TEXT_PLAIN_VALUE, droneName+".conf",googleDriveFolderId, vpnConfiguration);
-//        	}
-        );
+        	wasd.subscribe();
         	
         	
-//            ResponseEntity<String> result = restTemplate.postForEntity(createDroneUrl, request, String.class);
-//            if(result.getStatusCodeValue() == 200) {
-//            	String vpnConfiguration = result.getBody();
-//            	String googleDriveFolderId = GoogleDriveAPIUtil.searchFile(droneUser.getLogin(), true);
-//            	if(googleDriveFolderId == null) {
-//            		googleDriveFolderId = GoogleDriveAPIUtil.uploadFile("application/vnd.google-apps.folder", droneUser.getLogin(), null, null);
-//            	}
-//            	GoogleDriveAPIUtil.uploadFile(MediaType.TEXT_PLAIN_VALUE, droneName+".conf",googleDriveFolderId, vpnConfiguration);
-//                String ipAddress = vpnConfiguration.split("Address = ")[1].split(" ,")[0];
-//                
-//                droneDTO.setIpAddress(ipAddress);
-//                Drone drone = droneService.registerDrone(droneDTO, droneUser, droneDTO.getPassword());
-//
-//                return drone;
-//            }
-//            else {
-//            	return null;
-//            }
             
         }
         catch (JSONException e) {
@@ -427,6 +471,20 @@ public class DroneUserDroneService {
 		public void setUsername(String username) {
 			this.username = username;
 		}
+    	
+    }
+    
+    private class TakeOffRequest{
+    	Double altitude;
+
+		public Double getAltitude() {
+			return altitude;
+		}
+
+		public void setAltitude(Double altitude) {
+			this.altitude = altitude;
+		}
+    	
     	
     }
     

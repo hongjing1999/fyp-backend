@@ -36,6 +36,8 @@ public class DroneDTO {
     
     private Set<String> authorities;
     
+    private String image;
+    
     private boolean online;
 
     public DroneDTO() {
@@ -148,6 +150,14 @@ public class DroneDTO {
 
 	public void setOnline(boolean online) {
 		this.online = online;
+	}
+
+	public String getImage() {
+		return image;
+	}
+
+	public void setImage(String image) {
+		this.image = image;
 	}
 	
 	

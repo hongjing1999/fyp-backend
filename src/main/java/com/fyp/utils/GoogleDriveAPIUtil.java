@@ -1,5 +1,9 @@
 package com.fyp.utils;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -19,6 +23,7 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,6 +32,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -165,8 +171,15 @@ public class GoogleDriveAPIUtil {
 			queryString = "'14bW_E-YB2IM5jCg3aYC5PqyeaEuJfWWC' in parents and mimeType = 'application/vnd.google-apps.folder' and " + queryString;
 		}
 		else {
-			queryString = "'" + folderId+ "' in parents and " + queryString;
+			if(folderId != null) {
+				queryString = "'" + folderId+ "' in parents and " + queryString;
+			}
+			else {
+				queryString = "'14bW_E-YB2IM5jCg3aYC5PqyeaEuJfWWC' in parents and " + queryString;
+			}
 		}
+		
+		
 		System.out.println("Query STRING------------------------ " + queryString);
 		url = url +"?q=" + queryString;
 		RestTemplate restTemplate = new RestTemplate();
@@ -199,6 +212,22 @@ public class GoogleDriveAPIUtil {
 		String fileContent =  result.getBody();
 		
 		return fileContent;
+		
+	}
+	
+	public static byte[] downloadFileStream(String fileId) throws IOException {
+		String accessToken = "Bearer " + getAccessToken();
+		String url = "https://www.googleapis.com/drive/v2/files/" + fileId + "?alt=media";
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", accessToken);
+		headers.add("Content-Type", "text/plain");
+		HttpEntity<?> request = new HttpEntity<>(headers);
+
+		ResponseEntity<byte[]> result = restTemplate.exchange(url, HttpMethod.GET, request, byte[].class);
+		
+
+		return result.getBody();
 		
 	}
 	

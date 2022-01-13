@@ -251,6 +251,64 @@ public class DroneUserDroneManagementResource {
         
         
     }
+    
+    
+    @PostMapping("/take-off/{droneId}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
+    public void takeOffDrone(@PathVariable Long droneId){
+        Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
+        if(userOptional.isPresent()) {
+        	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(userOptional.get());
+        	if(droneUserOptional.isPresent()) {
+        		droneUserDroneService.takeOff(droneId);
+        	}
+        	
+        }
+    }
+    
+    @PostMapping("/land/{droneId}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
+    public void landDrone(@PathVariable Long droneId){
+        Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
+        if(userOptional.isPresent()) {
+        	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(userOptional.get());
+        	if(droneUserOptional.isPresent()) {
+        		droneUserDroneService.landing(droneId);
+        	}
+        	
+        }
+    }
+    
+
+    @GetMapping("/configuration-file/{droneId}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
+    public void getConfigurationFile(@PathVariable Long droneId, HttpServletResponse response) {
+        try {
+          // get your file as InputStream
+          InputStream is = droneUserDroneService.getDroneConfigurationFile(droneId);
+          // copy it to response's OutputStream
+          IOUtils.copy(is, response.getOutputStream());
+          response.flushBuffer();
+        } catch (IOException ex) {
+          throw new RuntimeException("IOError writing file to output stream");
+        }
+
+    }
+    
+    @GetMapping("/installation-script")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
+    public void getInstalltionScript(HttpServletResponse response) {
+        try {
+          // get your file as InputStream
+          InputStream is = droneUserDroneService.getInstallationScript();
+          // copy it to response's OutputStream
+          IOUtils.copy(is, response.getOutputStream());
+          response.flushBuffer();
+        } catch (IOException ex) {
+          throw new RuntimeException("IOError writing file to output stream");
+        }
+
+    }
 
 
     

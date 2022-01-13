@@ -63,6 +63,9 @@ public class Drone extends AbstractAuditingEntity implements Serializable {
     @JsonIgnore
     private Instant lastHeartBeatTime;
     
+    @Column(name = "image")
+    private String image;
+    
     @JsonIgnore
     @ManyToMany
     @JoinTable(
@@ -148,8 +151,14 @@ public class Drone extends AbstractAuditingEntity implements Serializable {
 	public void setResetDate(Instant resetDate) {
 		this.resetDate = resetDate;
 	}
-	
-	
+
+	public String getImage() {
+		return image;
+	}
+
+	public void setImage(String image) {
+		this.image = image;
+	}
 
 	public Set<Authority> getAuthorities() {
 		return authorities;

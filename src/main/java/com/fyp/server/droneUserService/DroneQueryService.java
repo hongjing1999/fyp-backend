@@ -104,6 +104,9 @@ public class DroneQueryService extends QueryService<Drone>{
     		}
     		droneDTO.setId(drone.getId());
     		droneDTO.setName(drone.getName());
+    		if(drone.getImage() != null) {
+    			droneDTO.setImage(drone.getImage());
+    		}
     		if(drone.getLastHeartBeatTime()!=null) {
     			if(ChronoUnit.SECONDS.between(drone.getLastHeartBeatTime(), Instant.now()) > 15) {
         			droneDTO.setOnline(false);
@@ -115,6 +118,7 @@ public class DroneQueryService extends QueryService<Drone>{
     		else {
     			droneDTO.setOnline(false);
     		}
+    		
     		
     		
     		droneDTOList.add(droneDTO);
