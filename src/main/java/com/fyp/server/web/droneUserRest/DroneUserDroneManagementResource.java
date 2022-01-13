@@ -16,12 +16,14 @@ import com.fyp.server.service.MailService;
 import com.fyp.server.service.UserService;
 import com.fyp.server.service.dto.AdminUserDTO;
 import com.fyp.server.service.dto.DroneDTO;
+import com.fyp.server.service.dto.DroneRequestDTO;
 import com.fyp.server.service.dto.DroneTelemetryDTO;
 import com.fyp.server.service.dto.DroneTelemetryGraphDTO;
 import com.fyp.server.service.dto.DroneUserDTO;
 import com.fyp.server.web.rest.errors.BadRequestAlertException;
 import com.fyp.server.web.rest.errors.EmailAlreadyUsedException;
 import com.fyp.server.web.rest.errors.LoginAlreadyUsedException;
+import com.fyp.server.web.rest.vm.LoginVM;
 import com.fyp.utils.GoogleDriveAPIUtil;
 import com.fyp.utils.PaginationUtil;
 import reactor.core.publisher.Flux;
@@ -305,12 +307,12 @@ public class DroneUserDroneManagementResource {
     
     @PostMapping("/take-off/{droneId}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
-    public void takeOffDrone(@PathVariable Long droneId){
+    public void takeOffDrone(@PathVariable Long droneId, @Valid @RequestBody DroneRequestDTO droneRequestDTO){
         Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
         if(userOptional.isPresent()) {
         	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(userOptional.get());
         	if(droneUserOptional.isPresent()) {
-        		droneUserDroneService.takeOff(droneId);
+        		droneUserDroneService.takeOff(droneUserOptional.get(), droneId, droneRequestDTO);
         	}
         	
         }
@@ -318,12 +320,12 @@ public class DroneUserDroneManagementResource {
     
     @PostMapping("/land/{droneId}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
-    public void landDrone(@PathVariable Long droneId){
+    public void landDrone(@PathVariable Long droneId, @Valid @RequestBody DroneRequestDTO droneRequestDTO){
         Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
         if(userOptional.isPresent()) {
         	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(userOptional.get());
         	if(droneUserOptional.isPresent()) {
-        		droneUserDroneService.landing(droneId);
+        		droneUserDroneService.landing(droneUserOptional.get(), droneId, droneRequestDTO);
         	}
         	
         }

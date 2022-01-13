@@ -21,6 +21,7 @@ import com.fyp.server.service.InvalidPasswordException;
 import com.fyp.server.service.UsernameAlreadyUsedException;
 import com.fyp.server.service.dto.AdminUserDTO;
 import com.fyp.server.service.dto.DroneDTO;
+import com.fyp.server.service.dto.DroneRequestDTO;
 import com.fyp.server.service.dto.DroneTelemetryDTO;
 import com.fyp.server.service.dto.DroneTelemetryGraphDTO;
 import com.fyp.server.service.dto.DroneUserDTO;
@@ -187,35 +188,46 @@ public class DroneUserDroneService {
     			
     }
     
-    public void takeOff(Long droneId) {
+    public void takeOff(DroneUser droneUser, Long droneId, DroneRequestDTO droneRequestDTO) {
     	Optional<Drone> droneOptional = droneRepository.findById(droneId);
     	if(droneOptional.isPresent()) {
     		Drone drone = droneOptional.get();
-    		String takeOffUrl = "http://" + "localhost" + ":5000/take-off";
-    		TakeOffRequest body = new TakeOffRequest();
-    		body.setAltitude(Double.valueOf(10));
-    		Mono<String> wasd = WebClient.create()
-        			.post()
-        			.uri(takeOffUrl)
-        			.contentType(MediaType.APPLICATION_JSON)
-        			.bodyValue(body).retrieve()
-        			.bodyToMono(String.class);
-    		wasd.subscribe();
+    		if(drone.getDroneUserId().equals(droneUser.getId())) {
+    			String takeOffUrl = "http://" + "localhost" + ":5000/take-off";
+        		TakeOffLandingRequest body = new TakeOffLandingRequest();
+        		body.setAltitude(Double.valueOf(10));
+        		body.setUsername(droneRequestDTO.getUsername());
+        		body.setPassword(droneRequestDTO.getPassword());
+        		Mono<String> wasd = WebClient.create()
+            			.post()
+            			.uri(takeOffUrl)
+            			.contentType(MediaType.APPLICATION_JSON)
+            			.bodyValue(body).retrieve()
+            			.bodyToMono(String.class);
+        		wasd.subscribe();
+    		}
+    		
     	}
     }
     
-    public void landing(Long droneId) {
+    public void landing(DroneUser droneUser, Long droneId, DroneRequestDTO droneRequestDTO) {
     	Optional<Drone> droneOptional = droneRepository.findById(droneId);
     	if(droneOptional.isPresent()) {
     		Drone drone = droneOptional.get();
-    		String takeOffUrl = "http://" + "localhost" + ":5000/land";
-    		Mono<String> wasd = WebClient.create()
-        			.post()
-        			.uri(takeOffUrl)
-        			.contentType(MediaType.APPLICATION_JSON)
-        			.retrieve()
-        			.bodyToMono(String.class);
-    		wasd.subscribe();
+    		if(drone.getDroneUserId().equals(droneUser.getId())) {
+    			String takeOffUrl = "http://" + "localhost" + ":5000/land";
+        		TakeOffLandingRequest body = new TakeOffLandingRequest();
+        		body.setAltitude(Double.valueOf(10));
+        		body.setUsername(droneRequestDTO.getUsername());
+        		body.setPassword(droneRequestDTO.getPassword());
+        		Mono<String> wasd = WebClient.create()
+            			.post()
+            			.uri(takeOffUrl)
+            			.contentType(MediaType.APPLICATION_JSON)
+            			.bodyValue(body).retrieve()
+            			.bodyToMono(String.class);
+        		wasd.subscribe();
+    		}	
     	}
     }
     
@@ -525,7 +537,9 @@ public class DroneUserDroneService {
     	
     }
     
-    private class TakeOffRequest{
+    private class TakeOffLandingRequest{
+    	String username;
+    	String password;
     	Double altitude;
 
 		public Double getAltitude() {
@@ -535,6 +549,24 @@ public class DroneUserDroneService {
 		public void setAltitude(Double altitude) {
 			this.altitude = altitude;
 		}
+
+		public String getUsername() {
+			return username;
+		}
+
+		public void setUsername(String username) {
+			this.username = username;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
+		public void setPassword(String password) {
+			this.password = password;
+		}
+		
+		
     	
     	
     }

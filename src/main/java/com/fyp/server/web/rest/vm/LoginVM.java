@@ -7,6 +7,8 @@ import javax.validation.constraints.Size;
  * View Model object for storing a user's credentials.
  */
 public class LoginVM {
+	
+	private Long droneId;
 
     @NotNull
     @Size(min = 1, max = 50)
@@ -42,7 +44,16 @@ public class LoginVM {
         this.rememberMe = rememberMe;
     }
 
-    // prettier-ignore
+    
+    public Long getDroneId() {
+		return droneId;
+	}
+
+	public void setDroneId(Long droneId) {
+		this.droneId = droneId;
+	}
+
+	// prettier-ignore
     @Override
     public String toString() {
         return "LoginVM{" +
