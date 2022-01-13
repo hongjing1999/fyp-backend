@@ -111,7 +111,7 @@ public class DroneUserDroneManagementResource {
 
     @PostMapping("/drone")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
-    public void createDrone(@Valid @RequestBody DroneDTO droneDTO){
+    public ResponseEntity<?> createDrone(@Valid @RequestBody DroneDTO droneDTO){
         log.debug("REST request to create drone : {}", droneDTO);
         Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
         if(userOptional.isPresent()) {
@@ -120,11 +120,39 @@ public class DroneUserDroneManagementResource {
         	if(droneUserOptional.isPresent()) {
         		Drone result = droneUserDroneService.createDrone(droneUserOptional.get(), droneDTO);
         		
-        		
-        		log.debug("--------------Result: {}", result.getName());
+        		return new ResponseEntity<>(result, HttpStatus.OK);
 
         	}
+        	else {
+        		throw new BadRequestAlertException("INVALID_DRONE", null, null);
+        	}
         	
+        }
+        else {
+        	throw new BadRequestAlertException("UNAUTHORIZED", null, null);
+        }
+    }
+    
+    @PutMapping("/drone")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
+    public ResponseEntity<?> editDrone(@Valid @RequestBody DroneDTO droneDTO){
+        log.debug("REST request to create drone : {}", droneDTO);
+        Optional<String> userOptional = SecurityUtils.getCurrentUserLogin();
+        if(userOptional.isPresent()) {
+        	log.debug("Login: {}", userOptional.get());
+        	Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(userOptional.get());
+        	if(droneUserOptional.isPresent()) {
+        		Drone result = droneUserDroneService.editDrone(droneUserOptional.get(), droneDTO);
+        		
+        		return new ResponseEntity<>(result, HttpStatus.OK);
+
+        	}
+        	else {
+        		throw new BadRequestAlertException("INVALID_DRONE_USER", null, null);
+        	}
+        }
+        else {
+        	throw new BadRequestAlertException("UNAUTHORIZED", null, null);
         }
     }
     
@@ -151,8 +179,18 @@ public class DroneUserDroneManagementResource {
         else {
         	 throw new BadRequestAlertException("UNAUTHORIZED", null, null);
         }
-    	
     }
+    
+    @GetMapping("drone/{droneId}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
+    public ResponseEntity<?> getDrone(@PathVariable Long droneId) {
+    	DroneDTO droneDTO = droneUserDroneService.getDrone(droneId);            			
+		
+		return new ResponseEntity<>(droneDTO, HttpStatus.OK);
+    }
+    
+    
+    
     @DeleteMapping("drone/{droneId}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.DRONEUSER + "\")")
     public ResponseEntity<?> deleteDrone(@PathVariable Long droneId){
@@ -166,11 +204,11 @@ public class DroneUserDroneManagementResource {
         		if(droneOptional.isPresent()) {
         			Drone drone = droneOptional.get();
         			if(drone.getDroneUserId().equals(droneUser.getId())) {
-        				droneUserDroneService.deleteDrone(droneId);
+        				droneUserDroneService.deleteDrone(drone);
         				return new ResponseEntity<>( HttpStatus.ACCEPTED);
         			}
         			else {
-        				throw new BadRequestAlertException("UNAUTHORIZED", null, null);
+        				throw new BadRequestAlertException("UNAUTHORIZED_USER", null, null);
         			}
         			
         		}
@@ -205,7 +243,7 @@ public class DroneUserDroneManagementResource {
 
         	}
         	else {
-        		throw new BadRequestAlertException("DRONE_USER_NOT_EXIST", null, null);
+        		throw new BadRequestAlertException("INVALID_DRONE_USER", null, null);
         	}
         }
         else {

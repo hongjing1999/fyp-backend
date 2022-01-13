@@ -228,18 +228,46 @@ public class DroneUserDroneService {
     	return droneQueryService.read(droneCriteria, pageable);
     }
     
-    public boolean deleteDrone(Long droneId) {
-    	Optional<Drone> droneOptional = droneRepository.findById(droneId);
-    	if(droneOptional.isPresent()) {
-    		Drone drone = droneOptional.get();
-    		List<DroneTelemetry> droneTelemetry = droneTelemetryRepository.findAllByDroneId(droneId);
-    		droneTelemetryRepository.deleteInBatch(droneTelemetry);
-    		droneRepository.delete(drone);
-    		return true;
+    public DroneDTO getDrone(Long droneId) {
+    	Optional<String> loginOptional = SecurityUtils.getCurrentUserLogin();
+    	if(loginOptional.isPresent()) {
+    		String login = loginOptional.get();
+    		Optional<DroneUser> droneUserOptional = droneUserRepository.findOneByLogin(login);
+    		if(droneUserOptional.isPresent()) {
+    			DroneUser droneUser = droneUserOptional.get();
+    			Optional<Drone> droneOptional = droneRepository.findById(droneId);
+    			if(droneOptional.isPresent()) {
+    				Drone drone = droneOptional.get();
+    				if(drone.getDroneUserId().equals(droneUser.getId())) {
+    					DroneDTO droneDTO = new DroneDTO();
+        				droneDTO.setImage(drone.getImage());
+        				droneDTO.setId(drone.getId());
+        				droneDTO.setName(drone.getName());
+        				return droneDTO;
+    				}
+    				else {
+    					throw new BadRequestAlertException("UNAUTHORIZED_USER", null, null);
+    				}
+    			}
+    			else {
+    				throw new BadRequestAlertException("INVALID_DRONE", null, null);
+    			}
+    		}
+    		else {
+    			throw new BadRequestAlertException("INVALID_DRONE_USER", null, null);
+    		}
+    		
     	}
     	else {
-    		return false;
+    		throw new BadRequestAlertException("UNAUTHORIZED", null, null);
     	}
+    }
+    
+    public boolean deleteDrone(Drone drone) {
+    	List<DroneTelemetry> droneTelemetry = droneTelemetryRepository.findAllByDroneId(drone.getId());
+		droneTelemetryRepository.deleteInBatch(droneTelemetry);
+		droneRepository.delete(drone);
+		return true;
     }
     
     public DroneTelemetryGraphDTO getDroneTelemetry(Long droneId, String range){
@@ -459,6 +487,26 @@ public class DroneUserDroneService {
         	throw e;
         }
         return drone;
+    }
+    
+    public Drone editDrone(DroneUser droneUser, DroneDTO droneDTO) {
+    	Optional<Drone> droneOptional = droneRepository.findById(droneDTO.getId());
+    	if(droneOptional.isPresent()) {
+    		Drone drone = droneOptional.get();
+    		if(drone.getDroneUserId().equals(droneUser.getId())) {
+    			drone.setName(droneDTO.getName());
+    			drone.setImage(droneDTO.getImage());
+    			droneRepository.save(drone);
+    			
+    			return drone;
+    		}
+    		else {
+    			throw new BadRequestAlertException("UNAUTHORIZED_USER", null, null);
+    		}
+    	}
+    	else {
+    		throw new BadRequestAlertException("INVALID_DRONE", null, null);
+    	}
     }
     
     private class VPNRequest{
