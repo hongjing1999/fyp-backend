@@ -103,7 +103,7 @@ public class DroneUserDroneService {
     }
     
     @Async
-    @Scheduled(fixedRate = 10000000)
+    @Scheduled(fixedRate = 1000000)
     public void getFromGoogleDrive() {
     	List<Drone> droneList = droneRepository.findAllByIpAddressIsNull();
     	for(Drone drone: droneList) {
@@ -172,7 +172,7 @@ public class DroneUserDroneService {
     
     public InputStream getInstallationScript() throws IOException {
     	
-    	String fileName = "desktop.tar.xz";
+    	String fileName = "install.tar.xz";
 		String fileId =  GoogleDriveAPIUtil.searchFile(fileName, false, null);
 		if(fileId != null) {
 			byte[] fileContent = GoogleDriveAPIUtil.downloadFileStream(fileId);
@@ -193,7 +193,7 @@ public class DroneUserDroneService {
     	if(droneOptional.isPresent()) {
     		Drone drone = droneOptional.get();
     		if(drone.getDroneUserId().equals(droneUser.getId())) {
-    			String takeOffUrl = "http://" + "localhost" + ":5000/take-off";
+    			String takeOffUrl = "http://" + drone.getIpAddress() + ":5000/take-off";
         		TakeOffLandingRequest body = new TakeOffLandingRequest();
         		body.setAltitude(Double.valueOf(10));
         		body.setUsername(droneRequestDTO.getUsername());
@@ -215,7 +215,7 @@ public class DroneUserDroneService {
     	if(droneOptional.isPresent()) {
     		Drone drone = droneOptional.get();
     		if(drone.getDroneUserId().equals(droneUser.getId())) {
-    			String takeOffUrl = "http://" + "localhost" + ":5000/land";
+    			String takeOffUrl = "http://" + drone.getIpAddress() + ":5000/land";
         		TakeOffLandingRequest body = new TakeOffLandingRequest();
         		body.setAltitude(Double.valueOf(10));
         		body.setUsername(droneRequestDTO.getUsername());
@@ -280,7 +280,7 @@ public class DroneUserDroneService {
     
     public boolean deleteDrone(Drone drone) {
     	List<DroneTelemetry> droneTelemetry = droneTelemetryRepository.findAllByDroneId(drone.getId());
-		droneTelemetryRepository.deleteInBatch(droneTelemetry);
+		droneTelemetryRepository.deleteAll(droneTelemetry);;
 		droneRepository.delete(drone);
 		return true;
     }
