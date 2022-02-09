@@ -125,7 +125,7 @@ public class DroneUserService {
             newUser.setEmail(droneUserDTO.getEmail().toLowerCase());
         }
         newUser.setImageUrl(droneUserDTO.getImageUrl());
-        newUser.setLangKey(droneUserDTO.getLangKey());
+        newUser.setLangKey("en");
         // new user is not active
         newUser.setActivated(false);
         // new user gets registration key
